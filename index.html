@@ -1,1 +1,67 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple MapTiles Viewer</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Initialize the map
+        const map = L.map('map', {
+            center: [37.7749, -122.4194], // Default center (San Francisco)
+            zoom: 12,
+            zoomControl: false,           // No zoom controls
+            attributionControl: false     // No attribution control
+        });
+        
+        // Your API key - replace YOUR_API_KEY with your actual API key
+        const apiKey = 'ZS9RHHRim7f1OZRKuI6n';
+        
+        // Add the tile layer (using OpenStreetMap as example)
+        // Replace this URL with your specific MapTiles provider URL that includes your API key
+        L.tileLayer('https://api.yourmaptilesprovider.com/tiles/{z}/{x}/{y}?apikey=' + apiKey, {
+            maxZoom: 19,
+            // No attribution to keep it clean
+        }).addTo(map);
+        
+        // Optional: Disable all map interactions if you want a completely static map
+        // Uncomment these lines to disable panning, zooming, etc.
+        /*
+        map.dragging.disable();
+        map.touchZoom.disable();
+        map.doubleClickZoom.disable();
+        map.scrollWheelZoom.disable();
+        map.boxZoom.disable();
+        map.keyboard.disable();
+        if (map.tap) map.tap.disable();
+        */
+    </script>
+</body>
+</html>
