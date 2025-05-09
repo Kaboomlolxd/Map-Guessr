@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Static Map View - Vancouver (Custom Style)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.maptiler.com/maptiler-sdk-js/v3.2.0/maptiler-sdk.umd.min.js"></script>
+    <link href="https://cdn.maptiler.com/maptiler-sdk-js/v3.2.0/maptiler-sdk.css" rel="stylesheet" />
+    <style>
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #f0f0f0; font-family: Arial, sans-serif; }
+        #map-container {
+            width: 80%; /* Adjust as needed */
+            max-width: 800px;
+            height: 60vh; /* Adjust as needed */
+            max-height: 600px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .controls {
+            margin-top: 20px;
+            padding: 10px;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Random Spot in Vancouver</h1>
+    <p id="locationText">Location: Queen Elizabeth Park</p>
+
+    <div id="map-container"></div>
+
+    <div class="controls">
+        <button id="newSpotButton">Get Another Random Spot</button>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // Ensure your API key is correct and active on MapTiler Cloud
+        const apiKey = 'ZS9RHHRim7f1OZRKuI6n';
+        maptilersdk.config.apiKey = apiKey;
+
+        // Define a list of potential random spots in Vancouver
+        const vancouverSpots = [
+            { name: "Queen Elizabeth Park", lng: -123.112755, lat: 49.241722 },
+            { name: "Stanley Park", lng: -123.1444, lat: 49.3013 },
+            { name: "Granville Island", lng: -123.1347, lat: 49.2717 },
+            { name: "Gastown", lng: -123.1045, lat: 49.2840 },
+            { name: "Kitsilano Beach", lng: -123.1600, lat: 49.2747 },
+            { name: "Science World", lng: -123.1087, lat: 49.2730 }
+        ];
+
+        let currentMarker = null; // Variable to hold the current marker
+
+        // Function to get a random spot from the list
+        function getRandomSpot() {
+            const randomIndex = Math.floor(Math.random() * vancouverSpots.length);
+            return vancouverSpots[randomIndex];
+        }
+
+        // Initial spot (can be the first one or a random one)
+        let currentSpot = vancouverSpots[0]; // Start with Queen Elizabeth Park
+
+        const zoomLevel = 14; // Adjust zoom level as desired
+
+        // Using the provided custom vector style URL
+        // Ensure this style URL is correct and accessible with your API key
+        const customStyleUrl = 'https://api.maptiler.com/maps/0196b6e1-f9ae-7bf0-ac8e-bd29c2ff2c90/style.json?key=' + apiKey;
+
+        // --- Initialize Map ---
+        const mapContainer = document.getElementById('map-container');
+
+        if (!mapContainer) {
+            console.error("Map container element not found!");
+        } else {
+            const map = new maptilersdk.Map({
+                container: 'map-container',
+                style: customStyleUrl, // Changed from maptilersdk.MapStyle.STREETS to the custom style URL
+                center: [currentSpot.lng, currentSpot.lat],
+                zoom: zoomLevel,
+                interactive: false // This makes the map non-interactive (no pan, no zoom)
+            });
+
+            // Add an error listener to the map to catch any map-specific loading issues
+            map.on('error', (e) => {
+                console.error('Map loading error:', e.error);
+                // Consider adding a more user-friendly message here if needed
+            });
+
+             // Add initial marker once the map style is loaded
+             map.on('style.load', () => {
+                 console.log('Map style loaded.');
+                 addMarker(currentSpot);
+             });
+
+             // Optional: Log when the full map is loaded (including tiles)
+             map.on('load', () => {
+                 console.log('Map fully loaded.');
+             });
+
+
+            // Function to add a marker to the map
+            function addMarker(spot) {
+                if (currentMarker) {
+                    currentMarker.remove(); // Remove the previous marker if it exists
+                }
+                currentMarker = new maptilersdk.Marker()
+                    .setLngLat([spot.lng, spot.lat])
+                    .addTo(map);
+            }
+
+
+            // --- Event Listeners ---
+            document.getElementById('newSpotButton').addEventListener('click', () => {
+                // Get a new random spot
+                const newSpot = getRandomSpot();
+
+                // Update the map view to the new spot with a smooth animation
+                map.flyTo({
+                    center: [newSpot.lng, newSpot.lat],
+                    essential: true // This ensures the animation happens even if the user has reduced motion enabled
+                });
+
+                // Update the location text displayed above the map
+                document.getElementById('locationText').textContent = `Location: ${newSpot.name}`;
+
+                // Add a marker to the new spot
+                addMarker(newSpot);
+            });
+        }
+
+    </script>
+
+</body>
+</html>
