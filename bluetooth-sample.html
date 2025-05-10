@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetooth Device Scanner</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button {
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .device-list {
+            margin-top: 20px;
+        }
+        
+        .device-item {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .device-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        .device-id {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .info {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bluetooth Device Scanner</h1>
+        
+        <div id="statusMessage" class="status info">
+            Click "Scan for Devices" to start searching for nearby Bluetooth devices.
+        </div>
+        
+        <div style="text-align: center;">
+            <button id="scanButton">Scan for Devices</button>
+        </div>
+        
+        <div class="device-list" id="deviceList"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const scanButton = document.getElementById('scanButton');
+            const deviceList = document.getElementById('deviceList');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Check if Web Bluetooth API is available
+            if (!navigator.bluetooth) {
+                statusMessage.textContent = 'Web Bluetooth API is not available in your browser. Please use Chrome, Edge, or Opera.';
+                statusMessage.className = 'status error';
+                scanButton.disabled = true;
+                return;
+            }
+            
+            scanButton.addEventListener('click', async () => {
+                deviceList.innerHTML = ''; // Clear previous results
+                statusMessage.textContent = 'Scanning for Bluetooth devices...';
+                statusMessage.className = 'status info';
+                scanButton.disabled = true;
+                
+                try {
+                    // Request Bluetooth devices
+                    const device = await navigator.bluetooth.requestDevice({
+                        // Accept all devices
+                        acceptAllDevices: true,
+                        // You can specify services you're looking for
+                        // optionalServices: ['battery_service']
+                    });
+                    
+                    // Display the device
+                    addDeviceToList(device);
+                    
+                    statusMessage.textContent = 'Device found! You can scan again for more devices.';
+                    statusMessage.className = 'status success';
+                } catch (error) {
+                    console.error('Bluetooth Error:', error);
+                    statusMessage.textContent = `Error: ${error.message || 'Failed to scan for devices'}`;
+                    statusMessage.className = 'status error';
+                } finally {
+                    scanButton.disabled = false;
+                }
+            });
+            
+            function addDeviceToList(device) {
+                const deviceItem = document.createElement('div');
+                deviceItem.className = 'device-item';
+                
+                const deviceName = document.createElement('div');
+                deviceName.className = 'device-name';
+                deviceName.textContent = device.name || 'Unnamed Device';
+                
+                const deviceId = document.createElement('div');
+                deviceId.className = 'device-id';
+                deviceId.textContent = `ID: ${device.id}`;
+                
+                const connectButton = document.createElement('button');
+                connectButton.textContent = 'Connect';
+                connectButton.addEventListener('click', () => connectToDevice(device));
+                
+                deviceItem.appendChild(deviceName);
+                deviceItem.appendChild(deviceId);
+                deviceItem.appendChild(connectButton);
+                
+                deviceList.appendChild(deviceItem);
+            }
+            
+            async function connectToDevice(device) {
+                try {
+                    statusMessage.textContent = `Connecting to ${device.name || 'device'}...`;
+                    statusMessage.className = 'status info';
+                    
+                    // Connect to the device
+                    const server = await device.gatt.connect();
+                    
+                    statusMessage.textContent = `Connected to ${device.name || 'device'}!`;
+                    statusMessage.className = 'status success';
+                    
+                    // Here you can discover services and interact with them
+                    // For example: const batteryService = await server.getPrimaryService('battery_service');
+                    
+                } catch (error) {
+                    console.error('Connection Error:', error);
+                    statusMessage.textContent = `Connection error: ${error.message}`;
+                    statusMessage.className = 'status error';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
